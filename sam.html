@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Envelope Printer</title>
+<style>
+body {
+    font-family: sans-serif; /* Default font */
+}
+#envelope {
+    border: 1px solid black;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+.address {
+    position: absolute;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+#toAddress {
+    left: 10mm;
+    top: 10mm;
+}
+#fromAddress {
+    right: 10mm;
+    bottom: 10mm;
+}
+#logo {
+    position: absolute;
+    top: 10mm;
+    right: 10mm;
+    max-width: 50mm;
+    max-height: 20mm;
+}
+#preview {
+    display: block;
+    margin-top: 20px;
+    width: fit-content;
+}
+/* Styles for printing */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #envelope, #envelope * {
+        visibility: visible;
+    }
+    #envelope {
+        position: absolute;
+        left: 0;
+        top: 0;
+        border: none;
+        width: auto;
+        height: auto;
+        background-color: transparent !important;
+        page-break-after: avoid;
+    }
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+}
+</style>
+</head>
+<body>
+
+<h1>Envelope Printer</h1>
+
+<label for="envelopeSize">Envelope Size:</label>
+<select id="envelopeSize">
+    <option value="c5">C5 (229 x 162 mm)</option>
+    <option value="dl">DL (220 x 110 mm)</option>
+    <option value="c4">C4 (324 x 229 mm)</option>
+    <option value="custom">Custom</option>
+</select>
+<br>
+<div id="customSizeInputs" style="display:none;">
+    <label for="customWidth">Width (mm):</label>
+    <input type="number" id="customWidth"><br>
+    <label for="customHeight">Height (mm):</label>
+    <input type="number" id="customHeight"><br>
+</div>
+<br>
+
+<label for="importAddresses">Import Addresses (CSV):</label>
+<input type="file" id="importAddresses" accept=".csv"><br><br>
+
+<label for="toAddressText">To Address:</label><br>
+<textarea id="toAddressText" rows="5" cols="40"></textarea><br><br>
+
+<label for="toAddressAlign">To Address Alignment:</label>
+<select id="toAddressAlign">
+    <option value="left">Left</option>
+    <option value="center">Center</option>
+    <option value="right">Right</option>
+</select><br><br>
+
+<label for="fromAddressText">From Address:</label><br>
+<textarea id="fromAddressText" rows="5" cols="40"></textarea><br><br>
+
+<label for="fromAddressAlign">From Address Alignment:</label>
+<select id="fromAddressAlign">
+    <option value="left">Left</option>
+    <option value="center">Center</option>
+    <option value="right">Right</option>
+</select><br><br>
+
+<label for="fontFamily">Font Family:</label>
+<select id="fontFamily">
+    <option value="sans-serif">Sans-serif</option>
+    <option value="serif">Serif</option>
+    <option value="monospace">Monospace</option>
+    <option value="Arial">Arial</option>
+    <option value="Verdana">Verdana</option>
+    <option value="Times New Roman">Times New Roman</option>
+    <option value="Courier New">Courier New</option>
+</select><br><br>
+
+<label for="backgroundColor">Background Color:</label>
+<input type="color" id="backgroundColor" value="#ffffff"><br><br>
+
+<label for="logoImage">Logo Image:</label>
+<input type="file" id="logoImage" accept="image/*"><br><br>
+
+<button onclick="updatePreview()">Print Preview</button>
+<button onclick="window.print()">Print</button>
+
+<div id="preview">
+    <div id="envelope">
+        <img id="logo" src="" alt="Logo">
+        <div id="toAddress" class="address"></div>
+        <div id="fromAddress" class="address"></div>
+    </div>
+</div>
+
+<script>
+function updatePreview() {
+    const envelopeSize = document.getElementById("envelopeSize").value;
+    const toAddressText = document.getElementById("toAddressText").value;
+    const fromAddressText = document.getElementById("fromAddressText").value;
+    const toAddressDiv = document.getElementById("toAddress");
+    const fromAddressDiv = document.getElementById("fromAddress");
+    const envelopeDiv = document.getElementById("envelope");
+    const logoImage = document.getElementById("logoImage").files[0];
+    const logoElement = document.getElementById("logo");
+    const toAddressAlign = document.getElementById("toAddressAlign").value;
+    const fromAddressAlign = document.getElementById("fromAddressAlign").value;
+    const backgroundColor = document.getElementById("backgroundColor").value;
+    const fontFamily = document.getElementById("fontFamily").value;
+
+    toAddressDiv.textContent = toAddressText;
+    fromAddressDiv.textContent = fromAddressText;
+    toAddressDiv.style.textAlign = toAddressAlign;
+    fromAddressDiv.style.textAlign = fromAddressAlign;
+    envelopeDiv.style.backgroundColor = backgroundColor;
+    envelopeDiv.style.fontFamily = fontFamily; // Set font family
+
+    if (logoImage) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            logoElement.src = e.target.result;
+        }
+        reader.readAsDataURL(logoImage);
+        logoElement.style.display = "block";
+    } else {
+        logoElement.style.display = "none";
+    }
+
+    let width, height;
+    if (envelopeSize === "c5") {
+        width = 229;
+        height = 162;
+    } else if (envelopeSize === "dl") {
+        width = 220;
+        height = 110;
+    } else if (envelopeSize === "c4") {
+        width = 324;
+        height = 229;
+    } else if (envelopeSize === "custom") {
+        width = parseFloat(document.getElementById("customWidth").value);
+        height = parseFloat(document.getElementById("customHeight").value);
+        if (isNaN(width) || isNaN(height) || width <= 0 || height <=0) {
+            alert("Please enter valid width and height for custom size.");
+            return;
+        }
+    }
+
+    envelopeDiv.style.width = width + "mm";
+    envelopeDiv.style.height = height + "mm";
+}
+
+document.getElementById("envelopeSize").addEventListener("change", function() {
+    const customSizeInputs = document.getElementById("customSizeInputs");
+    if (this.value === "custom") {
+        customSizeInputs.style.display = "block";
+    } else {
+        customSizeInputs.style.display = "none";
+    }
+});
+
+document.getElementById('importAddresses').addEventListener('change', handleFileSelect, false);
+
+function handleFileSelect(evt) {
+    const file = evt.target.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const contents = e.target.result;
+            processCSV(contents);
+        };
+
+        reader.readAsText(file);
+    }
+}
+
+function processCSV(csvData) {
+    const lines = csvData.split(/\r\n|\n/);
+    if (lines.length > 0) {
+        const firstAddress = lines[1];
+        if (firstAddress) {
+            const addressParts = firstAddress.split(',');
+            if (addressParts.length > 0) {
+                document.getElementById('toAddressText').value = addressParts[0].replace(/"/g, "");
+            }
+        }
+    }
+}
+
+updatePreview();
+</script>
+
+</body>
+</html>
